@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -17,6 +18,8 @@ import android.os.Bundle;
 
 import android.os.IBinder;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -89,6 +92,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+
 /**
  * An activity that displays a map showing the place at the device's current location.
  */
@@ -150,12 +155,14 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
     public static LatLng currLocation;
 
+    final String[] result = {""};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
 
-
+        getLocations("last_day");
 
         // Retrieve location and camera position from saved instance state.
         if (savedInstanceState != null) {
@@ -187,6 +194,23 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 getLocations("last_day");
+                System.out.println(result[0]);
+                AlertDialog.Builder alert = new AlertDialog.Builder(MapsActivityCurrentPlace.this);
+                alert.setTitle("Your score is ...");
+
+
+
+                TextView myMsg = new TextView(MapsActivityCurrentPlace.this);
+                myMsg.setText(result[0]);
+                myMsg.setGravity(Gravity.CENTER_HORIZONTAL);
+                myMsg.setTypeface(null, Typeface.BOLD);
+                myMsg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f);
+
+                alert.setView(myMsg);
+
+                alert.setPositiveButton("Got it!",null);
+                alert.show();
+
             }
         });
 
@@ -196,6 +220,23 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 getLocations("all");
+                System.out.println(result[0]);
+                AlertDialog.Builder alert = new AlertDialog.Builder(MapsActivityCurrentPlace.this);
+                alert.setTitle("Your score is ...");
+
+
+
+                TextView myMsg = new TextView(MapsActivityCurrentPlace.this);
+                myMsg.setText(result[0]);
+                myMsg.setGravity(Gravity.CENTER_HORIZONTAL);
+                myMsg.setTypeface(null, Typeface.BOLD);
+                myMsg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f);
+
+                alert.setView(myMsg);
+
+                alert.setPositiveButton("Got it!",null);
+                alert.show();
+
             }
         });
 
@@ -322,8 +363,9 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
     }
 
-    private void getLocations(String type){
+    private String getLocations(String type){
         String BaseUrl = new Secret().getUrl();
+
 
         if(type.equals("last")){
             String server_url_insert=BaseUrl + "/get-last-locations/" + mac_address;
@@ -370,7 +412,19 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                             @Override
                             public void onResponse(String response) {
                                 // Display the first 500 characters of the response string.
-                                System.out.println("Response is: "+ response);
+                                //System.out.println("Response is: "+ response);
+                                boolean isFound = response.indexOf("score") !=-1? true: false;
+                               // System.out.println(isFound);
+
+                                if (isFound){
+                                    String score = response.substring(response.indexOf("score")+8, response.indexOf("score") + 9);
+
+                                    int scorenum = Integer.parseInt(score);
+                                    scorenum++;
+                                    result[0] =  String.valueOf(scorenum);
+
+                                }
+
 
                             }
                         }, new Response.ErrorListener() {
@@ -382,6 +436,8 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
 
                 Volley.newRequestQueue(this).add(stringRequest);
+
+
 
             } catch(Exception e){
 
@@ -404,7 +460,17 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                             @Override
                             public void onResponse(String response) {
                                 // Display the first 500 characters of the response string.
-                                System.out.println("Response is: "+ response);
+                                boolean isFound = response.indexOf("score") !=-1? true: false;
+                                // System.out.println(isFound);
+
+                                if (isFound){
+                                    String score = response.substring(response.indexOf("score")+8, response.indexOf("score") + 9);
+
+                                    int scorenum = Integer.parseInt(score);
+                                    scorenum++;
+                                    result[0] =  String.valueOf(scorenum);
+
+                                }
 
                             }
                         }, new Response.ErrorListener() {
@@ -423,6 +489,8 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
         }
 
 
+
+        return "No type specified";
     }
 
 

@@ -4,7 +4,7 @@ import requests
 import argparse
 from secrets import Secret as s
 
-HOST = s.ip
+HOST = "https://127.0.0.1:5000"
 
 parser = argparse.ArgumentParser(description="Control the server hosting Covid19")
 parser.add_argument('-c', action='store_true')
