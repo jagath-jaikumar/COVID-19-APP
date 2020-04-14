@@ -32,6 +32,33 @@ def get_loc(mac):
     return {"result":"Success","locations":locs}
 
 
+@app.route("/get-last-locations/<mac>", methods=["GET"])
+def get_loc_last(mac):
+    print(mac)
+    locs = locations.search(where('User') == mac)
+    print(sorted(locs, key = lambda i: int(i['Timestamp']),reverse=True)[0] )
+    return {"result":"Success","location":sorted(locs, key = lambda i: int(i['Timestamp']),reverse=True)[0]}
+
+
+@app.route("/get-last-locations-day/<mac>/<timestamp>", methods=["GET"])
+def get_loc_last_day(mac,timestamp):
+    print(mac)
+    locs = locations.search(where('User') == mac)
+
+    last_day_locs = []
+
+    cur_time = timestamp
+    last_day = int(timestamp) - 86400
+
+
+
+    for loc in locs:
+        if int(loc['Timestamp']) > last_day:
+            last_day_locs.append(loc)
+
+    return {"result":"Success","location":last_day_locs}
+
+
 
 
 

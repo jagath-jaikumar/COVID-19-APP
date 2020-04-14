@@ -1,6 +1,8 @@
 package com.example.currentplacedetailsonmap;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,6 +12,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,9 +22,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
@@ -43,6 +48,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import com.google.android.libraries.places.api.Places;
@@ -101,7 +107,7 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
-    private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
+    private LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 0;
     private boolean mLocationPermissionGranted;
@@ -133,6 +139,8 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
     private int btDevicesCount;
     ////////////////////////////////////////////////////////////////////////////////
     private String mac_address;
+    private FusedLocationProviderClient fusedLocationClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -142,7 +150,22 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
             mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            // Logic to handle location object
+                            mLastKnownLocation = location;
+                            mDefaultLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
+                            System.out.println(mDefaultLocation.latitude);
+                            System.out.println(mDefaultLocation.longitude);
+                        }
+                    }
+                });
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_maps);
 
@@ -161,8 +184,10 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
         mac_address = getMacAddr();
 
 
-        addLocation("default");
-        getLocations();
+//        addLocation("default");
+//        getLocations("last_day");
+
+        startService(new Intent(this, DataSender.class));
 
     }
 
@@ -212,7 +237,8 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                 }
 
                 String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-
+                System.out.println("Timestamp: ");
+                System.out.println(timeStamp);
 
                 params.put("User", mac_address);
                 params.put("Latitude", Double.toString(mDefaultLocation.latitude));
@@ -255,38 +281,111 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
     }
 
-    private void getLocations(){
+    private void getLocations(String type){
         String BaseUrl = new Secret().getUrl();
-        String server_url_insert=BaseUrl + "/get-all-locations/" + mac_address;
 
-        try{
+        if(type.equals("last")){
+            String server_url_insert=BaseUrl + "/get-last-locations/" + mac_address;
+            try{
 
-            String url=server_url_insert;
-            HttpsTrustManager.allowAllSSL();
-
-
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            // Display the first 500 characters of the response string.
-                          System.out.println("Response is: "+ response);
-                        }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    System.out.println("That didn't work!");
-                }
-            });
+                String url=server_url_insert;
+                HttpsTrustManager.allowAllSSL();
 
 
-            Volley.newRequestQueue(this).add(stringRequest);
+                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                // Display the first 500 characters of the response string.
+                                System.out.println("Response is: "+ response);
 
-        } catch(Exception e){
+                            }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        System.out.println("That didn't work!");
+                    }
+                });
 
+
+                Volley.newRequestQueue(this).add(stringRequest);
+
+            } catch(Exception e){
+
+            }
         }
 
+        if(type.equals("last_day")){
+            String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+            String server_url_insert=BaseUrl + "/get-last-locations-day/" + mac_address + "/" + timeStamp;
+            try{
+
+                String url=server_url_insert;
+                HttpsTrustManager.allowAllSSL();
+
+
+                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                // Display the first 500 characters of the response string.
+                                System.out.println("Response is: "+ response);
+
+                            }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        System.out.println("That didn't work!");
+                    }
+                });
+
+
+                Volley.newRequestQueue(this).add(stringRequest);
+
+            } catch(Exception e){
+
+            }
+        }
+
+
+        if (type.equals("all")){
+            String server_url_insert=BaseUrl + "/get-all-locations/" + mac_address;
+
+
+            try{
+
+                String url=server_url_insert;
+                HttpsTrustManager.allowAllSSL();
+
+
+                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                // Display the first 500 characters of the response string.
+                                System.out.println("Response is: "+ response);
+
+                            }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        System.out.println("That didn't work!");
+                    }
+                });
+
+
+                Volley.newRequestQueue(this).add(stringRequest);
+
+            } catch(Exception e){
+
+            }
+        }
+
+
     }
+
+
+
     /**
      * Saves the state of the map when the activity is paused.
      */
@@ -691,5 +790,75 @@ class HttpsTrustManager implements X509TrustManager {
 
 }
 
+
+class DataSender extends Service {
+
+    private static final int NOTIF_ID = 1;
+    private static final String NOTIF_CHANNEL_ID = "Channel_Id";
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId){
+
+        // do your jobs here
+
+        String BaseUrl = new Secret().getUrl();
+
+        String server_url_insert=BaseUrl + "/";
+        try{
+
+            String url=server_url_insert;
+            HttpsTrustManager.allowAllSSL();
+
+
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            // Display the first 500 characters of the response string.
+                            System.out.println("Response is: "+ response);
+
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    System.out.println("That didn't work!");
+                }
+            });
+
+
+            Volley.newRequestQueue(this).add(stringRequest);
+
+        } catch(Exception e){
+
+        }
+
+
+
+        startForeground();
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void startForeground() {
+        Intent notificationIntent = new Intent(this, MapsActivityCurrentPlace.class);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                notificationIntent, 0);
+
+        startForeground(NOTIF_ID, new NotificationCompat.Builder(this,
+                NOTIF_CHANNEL_ID) // don't forget create a notification channel first
+                .setOngoing(true)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText("Service is running background")
+                .setContentIntent(pendingIntent)
+                .build());
+    }
+}
 
 // powered by bee
