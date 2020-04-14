@@ -1,6 +1,9 @@
 package com.example.currentplacedetailsonmap;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -17,6 +20,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,6 +42,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -140,10 +145,17 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
     ////////////////////////////////////////////////////////////////////////////////
     private String mac_address;
     private FusedLocationProviderClient fusedLocationClient;
+    public static String id1 = "test_channel_01";
+
+
+    public static LatLng currLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
 
         // Retrieve location and camera position from saved instance state.
         if (savedInstanceState != null) {
@@ -169,6 +181,27 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_maps);
 
+
+        Button lastDay =  findViewById(R.id.button1);
+        lastDay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getLocations("last_day");
+            }
+        });
+
+
+        Button allTime =  findViewById(R.id.button2);
+        allTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getLocations("all");
+            }
+        });
+
+
+
+
         // Construct a PlacesClient
         Places.initialize(getApplicationContext(), getString(R.string.google_maps_key));
         mPlacesClient = Places.createClient(this);
@@ -186,8 +219,16 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
 //        addLocation("default");
 //        getLocations("last_day");
+        createchannel();
+        Intent number5 = new Intent(getBaseContext(), DataSender.class);
+        number5.putExtra("times", 5);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(number5);
+        } else {
+            //lower then Oreo, just start the service.
+            startService(number5);
+        }
 
-        startService(new Intent(this, DataSender.class));
 
     }
 
@@ -418,13 +459,13 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.option_get_place) {
-            showCurrentPlace();
-        } else if (item.getItemId() == R.id.nearby_devices) {
-            // Launch the DeviceListActivity to see devices and do scan
-            Intent serverIntent = new Intent(this, DeviceListActivity.class);
-            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-        }
+//        if (item.getItemId() == R.id.option_get_place) {
+//            showCurrentPlace();
+//        } else if (item.getItemId() == R.id.nearby_devices) {
+//            // Launch the DeviceListActivity to see devices and do scan
+//            Intent serverIntent = new Intent(this, DeviceListActivity.class);
+//            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+//        }
         return true;
     }
 
@@ -727,6 +768,28 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
         }
     }
 
+
+    private void createchannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            NotificationChannel mChannel = new NotificationChannel(id1,
+                    getString(R.string.channel_name),  //name of the channel
+                    NotificationManager.IMPORTANCE_LOW);   //importance level
+            //important level: default is is high on the phone.  high is urgent on the phone.  low is medium, so none is low?
+            // Configure the notification channel.
+            mChannel.setDescription(getString(R.string.channel_description));
+            mChannel.enableLights(true);
+            // Sets the notification light color for notifications posted to this channel, if the device supports this feature.
+            mChannel.setShowBadge(true);
+            nm.createNotificationChannel(mChannel);
+        }
+    }
+
+
+
+
+
 }
 class HttpsTrustManager implements X509TrustManager {
 
@@ -791,74 +854,5 @@ class HttpsTrustManager implements X509TrustManager {
 }
 
 
-class DataSender extends Service {
-
-    private static final int NOTIF_ID = 1;
-    private static final String NOTIF_CHANNEL_ID = "Channel_Id";
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
-
-        // do your jobs here
-
-        String BaseUrl = new Secret().getUrl();
-
-        String server_url_insert=BaseUrl + "/";
-        try{
-
-            String url=server_url_insert;
-            HttpsTrustManager.allowAllSSL();
-
-
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            // Display the first 500 characters of the response string.
-                            System.out.println("Response is: "+ response);
-
-                        }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    System.out.println("That didn't work!");
-                }
-            });
-
-
-            Volley.newRequestQueue(this).add(stringRequest);
-
-        } catch(Exception e){
-
-        }
-
-
-
-        startForeground();
-
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    private void startForeground() {
-        Intent notificationIntent = new Intent(this, MapsActivityCurrentPlace.class);
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                notificationIntent, 0);
-
-        startForeground(NOTIF_ID, new NotificationCompat.Builder(this,
-                NOTIF_CHANNEL_ID) // don't forget create a notification channel first
-                .setOngoing(true)
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText("Service is running background")
-                .setContentIntent(pendingIntent)
-                .build());
-    }
-}
 
 // powered by bee
