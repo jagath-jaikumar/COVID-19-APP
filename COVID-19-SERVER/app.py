@@ -45,7 +45,7 @@ def get_loc_last_day(mac,timestamp):
         if int(loc['Timestamp']) > last_day:
             last_day_locs.append(loc)
 
-    score1, score2 = calculateScore(last_day_locs)
+    score1, score2 = calculateScore(last_day_locs, timestamp)
     return {"result":"Success","location":last_day_locs, "score1":score1, "score2":score2}
 
 
@@ -53,10 +53,11 @@ def get_loc_last_day(mac,timestamp):
 
 
 
-@app.route("/popular-places-day/<timestamp>", methods=["GET"])
-def pop_places(timestamp):
-
+@app.route("/popular-places-day/<timestamp>/<type>", methods=["GET"])
+def pop_places(timestamp, type):
     locs = locations.all()
+
+
     res = []
 
 
@@ -72,15 +73,19 @@ def pop_places(timestamp):
 
 
     print(just_latlon)
-    return {"result":just_latlon}
+    if type == "mobile":
+        return {"result":just_latlon}
+
+    else:
+        return {"result": res}
 
 
 
 
 
 
-def calculateScore(locations):
-    s = Score(locations)
+def calculateScore(locations, timestamp):
+    s = Score(locations, timestamp)
     return s.social_distance_score()
 
 
@@ -88,6 +93,10 @@ def calculateScore(locations):
 def hello():
     return "My COVID-19 App Server"
 
+
+@app.route("/test")
+def test():
+    return "test"
 
 
 @app.route("/admin-cleardb",methods=["GET"])
@@ -98,6 +107,8 @@ def clear_db():
 
 
 if __name__ == '__main__':
+
+
     app.run(debug=True, host='0.0.0.0',ssl_context='adhoc')
 
 

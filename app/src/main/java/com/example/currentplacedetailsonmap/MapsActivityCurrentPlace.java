@@ -709,7 +709,7 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
 
         String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        String server_url_insert=BaseUrl + "/popular-places-day/" + timeStamp;
+        String server_url_insert=BaseUrl + "/popular-places-day/" + timeStamp + "/mobile";
 
         try{
 

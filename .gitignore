@@ -11,3 +11,5 @@
 gradle.properties
 
 app/src/main/java/com/example/currentplacedetailsonmap/Secret.java
+
+COVID-19-PHA/secrets.py
