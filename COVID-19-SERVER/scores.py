@@ -8,4 +8,5 @@ class Score:
         self.locations = locations
 
     def social_distance_score(self):
-        return 0
+        print(self.locations)
+        return 0,1

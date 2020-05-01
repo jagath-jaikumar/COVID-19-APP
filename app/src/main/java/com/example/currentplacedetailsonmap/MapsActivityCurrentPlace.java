@@ -51,10 +51,14 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -67,9 +71,11 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.gson.JsonObject;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.NetworkInterface;
 import java.net.URLEncoder;
@@ -77,11 +83,13 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
@@ -92,6 +100,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
 
 
 /**
@@ -155,7 +164,10 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
     public static LatLng currLocation;
 
-    final String[] result = {""};
+    final String[] result = {"","",""};
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,6 +175,11 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
 
         getLocations("last_day");
+
+
+
+
+
 
         // Retrieve location and camera position from saved instance state.
         if (savedInstanceState != null) {
@@ -196,7 +213,7 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                 getLocations("last_day");
                 System.out.println(result[0]);
                 AlertDialog.Builder alert = new AlertDialog.Builder(MapsActivityCurrentPlace.this);
-                alert.setTitle("Your score is ...");
+                alert.setTitle("Your travel score is ...");
 
 
 
@@ -210,6 +227,24 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
                 alert.setPositiveButton("Got it!",null);
                 alert.show();
+
+
+
+                AlertDialog.Builder alert2 = new AlertDialog.Builder(MapsActivityCurrentPlace.this);
+                alert2.setTitle("Your interaction score is ...");
+
+
+
+                TextView myMsg2 = new TextView(MapsActivityCurrentPlace.this);
+                myMsg2.setText(result[1]);
+                myMsg2.setGravity(Gravity.CENTER_HORIZONTAL);
+                myMsg2.setTypeface(null, Typeface.BOLD);
+                myMsg2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f);
+
+                alert2.setView(myMsg2);
+
+                alert2.setPositiveButton("Got it!",null);
+                alert2.show();
 
             }
         });
@@ -222,7 +257,7 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                 getLocations("all");
                 System.out.println(result[0]);
                 AlertDialog.Builder alert = new AlertDialog.Builder(MapsActivityCurrentPlace.this);
-                alert.setTitle("Your score is ...");
+                alert.setTitle("Your travel score is ...");
 
 
 
@@ -236,6 +271,24 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
                 alert.setPositiveButton("Got it!",null);
                 alert.show();
+
+
+
+                AlertDialog.Builder alert2 = new AlertDialog.Builder(MapsActivityCurrentPlace.this);
+                alert2.setTitle("Your interaction score is ...");
+
+
+
+                TextView myMsg2 = new TextView(MapsActivityCurrentPlace.this);
+                myMsg2.setText(result[1]);
+                myMsg2.setGravity(Gravity.CENTER_HORIZONTAL);
+                myMsg2.setTypeface(null, Typeface.BOLD);
+                myMsg2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f);
+
+                alert2.setView(myMsg2);
+
+                alert2.setPositiveButton("Got it!",null);
+                alert2.show();
 
             }
         });
@@ -271,6 +324,10 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
         }
 
 
+
+
+
+        //getHeatMapData();
     }
 
     public static String getMacAddr() {
@@ -413,15 +470,23 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                             public void onResponse(String response) {
                                 // Display the first 500 characters of the response string.
                                 //System.out.println("Response is: "+ response);
-                                boolean isFound = response.indexOf("score") !=-1? true: false;
+                                boolean isFound = response.indexOf("score1") !=-1? true: false;
                                // System.out.println(isFound);
 
                                 if (isFound){
-                                    String score = response.substring(response.indexOf("score")+8, response.indexOf("score") + 9);
+                                    String score1 = response.substring(response.indexOf("score1")+9, response.indexOf("score1") + 10);
+                                    String score2 = response.substring(response.indexOf("score2")+9, response.indexOf("score2") + 10);
 
-                                    int scorenum = Integer.parseInt(score);
-                                    scorenum++;
-                                    result[0] =  String.valueOf(scorenum);
+                                    int scorenum1 = Integer.parseInt(score1);
+
+                                    int scorenum2 = Integer.parseInt(score2);
+
+
+                                    scorenum1++;
+                                    scorenum2++;
+
+                                    result[0] =  String.valueOf(scorenum1);
+                                    result[1] =  String.valueOf(scorenum2);
 
                                 }
 
@@ -460,15 +525,23 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                             @Override
                             public void onResponse(String response) {
                                 // Display the first 500 characters of the response string.
-                                boolean isFound = response.indexOf("score") !=-1? true: false;
+                                boolean isFound = response.indexOf("score1") !=-1? true: false;
                                 // System.out.println(isFound);
 
                                 if (isFound){
-                                    String score = response.substring(response.indexOf("score")+8, response.indexOf("score") + 9);
+                                    String score1 = response.substring(response.indexOf("score1")+9, response.indexOf("score1") + 10);
+                                    String score2 = response.substring(response.indexOf("score2")+9, response.indexOf("score2") + 10);
 
-                                    int scorenum = Integer.parseInt(score);
-                                    scorenum++;
-                                    result[0] =  String.valueOf(scorenum);
+                                    int scorenum1 = Integer.parseInt(score1);
+
+                                    int scorenum2 = Integer.parseInt(score2);
+
+
+                                    scorenum1++;
+                                    scorenum2++;
+
+                                    result[0] =  String.valueOf(scorenum1);
+                                    result[1] =  String.valueOf(scorenum2);
 
                                 }
 
@@ -577,6 +650,9 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
         mMap = map;
 
 
+
+
+
         // TEST
 //        // Add a marker in Sydney and move the camera
 //        LatLng sydney = new LatLng(-34, 151);
@@ -609,6 +685,8 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
             }
         });
 
+
+
         // Prompt the user for permission.
         getLocationPermission();
 
@@ -617,7 +695,98 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
 
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
+
+
+        getHeatMapData();
+
+
     }
+
+    final List<LatLng> list = new ArrayList<LatLng>();
+
+    private void getHeatMapData() {
+        String BaseUrl = new Secret().getUrl();
+
+
+        String timeStamp = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        String server_url_insert=BaseUrl + "/popular-places-day/" + timeStamp;
+
+        try{
+
+            String url=server_url_insert;
+            HttpsTrustManager.allowAllSSL();
+
+
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+
+
+                            String s = response.substring(response.indexOf("result")+10,response.length() - 4);
+
+                            result[2] = s;
+                            System.out.println(result[2]);
+                            String[] latlons = result[2].split(",");
+
+
+                            boolean isLat = true;
+                            Double lat = 0.0;
+                            for (String dec : latlons){
+                                if (isLat){
+                                    lat = Double.valueOf(dec);
+                                    isLat = false;
+                                } else {
+                                    Double lon = Double.valueOf(dec);
+                                    list.add(new LatLng(lat, lon));
+                                    isLat = true;
+                                }
+                            }
+
+                            System.out.println("HERE Points " + list.size());
+                            addHeatMap();
+
+
+
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    System.out.println("That didn't work!");
+                }
+            });
+
+
+            Volley.newRequestQueue(this).add(stringRequest);
+
+
+
+        } catch(Exception e){
+
+        }
+
+
+
+
+    }
+
+    private HeatmapTileProvider mProvider;
+    private TileOverlay mOverlay;
+
+
+    private void addHeatMap(){
+
+        System.out.println("Points " + list.size());
+        // Create the tile provider.
+        mProvider = new HeatmapTileProvider.Builder()
+                .data(list)
+                .build();
+        // Add a tile overlay to the map, using the heat map tile provider.
+        mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+
+    }
+
 
 
     /**
@@ -804,6 +973,8 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                 // Position the map's camera at the location of the marker.
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerLatLng,
                         DEFAULT_ZOOM));
+
+
             }
         };
 

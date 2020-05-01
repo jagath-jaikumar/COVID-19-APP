@@ -168,7 +168,7 @@ public class DataSender extends Service {
     public class MyLocationListener implements LocationListener {
 
         public void onLocationChanged(final Location loc) {
-         //   Log.i("*****", "Location changed");
+            Log.i("*****", "Location changed");
 
             if (isBetterLocation(loc, previousBestLocation)) {
                 loc.getLatitude();
@@ -176,8 +176,8 @@ public class DataSender extends Service {
                 intent.putExtra("Latitude", loc.getLatitude());
                 intent.putExtra("Longitude", loc.getLongitude());
 
-//                Log.i("**:","Latitude: "+loc.getLatitude());
-//                Log.i("**","Longitude: " +loc.getLongitude());
+                Log.i("**:","Latitude: "+loc.getLatitude());
+                Log.i("**","Longitude: " +loc.getLongitude());
 
                 intent.putExtra("Provider", loc.getProvider());
                 sendBroadcast(intent);

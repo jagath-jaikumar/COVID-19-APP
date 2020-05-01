@@ -34,6 +34,8 @@ dependencies {
     implementation 'com.google.android.libraries.places:places:2.2.0'
     testImplementation 'junit:junit:4.12'
 
+    implementation 'com.google.maps.android:android-maps-utils:1.1.0'
+
 
 
     implementation 'com.android.support:design:1.1.0'

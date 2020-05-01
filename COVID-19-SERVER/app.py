@@ -45,8 +45,39 @@ def get_loc_last_day(mac,timestamp):
         if int(loc['Timestamp']) > last_day:
             last_day_locs.append(loc)
 
-    score = calculateScore(last_day_locs)
-    return {"result":"Success","location":last_day_locs, "score":score}
+    score1, score2 = calculateScore(last_day_locs)
+    return {"result":"Success","location":last_day_locs, "score1":score1, "score2":score2}
+
+
+
+
+
+
+@app.route("/popular-places-day/<timestamp>", methods=["GET"])
+def pop_places(timestamp):
+
+    locs = locations.all()
+    res = []
+
+
+    just_latlon = ""
+
+    for loc in locs:
+        if int(loc['Timestamp']) > int(timestamp)-86400:
+            res.append({"Lat":loc['Latitude'], "Lon":loc['Longitude']})
+            just_latlon+=loc['Latitude']
+            just_latlon+=","
+            just_latlon+=loc['Longitude']
+            just_latlon+=","
+
+
+    print(just_latlon)
+    return {"result":just_latlon}
+
+
+
+
+
 
 def calculateScore(locations):
     s = Score(locations)
