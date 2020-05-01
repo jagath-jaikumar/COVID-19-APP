@@ -1,7 +1,7 @@
-COVID-19 Social Distancing Scorer
+HotSpot
 =====================================================
 
-This app can be used by all android devices with no login necessary. It returns a "social distance score" based on how many places you have visited in the past day or week.
+This app can be used by all android devices with no login necessary. It returns a "social distance score" based on how many places you have visited in the past day or week. It also shows you where people have been frequently gathering in the past day.
 
 Prerequisites
 --------------
