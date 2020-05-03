@@ -723,28 +723,30 @@ public class MapsActivityCurrentPlace extends AppCompatActivity
                         public void onResponse(String response) {
 
 
-                            String s = response.substring(response.indexOf("result")+10,response.length() - 4);
+                                String s = response.substring(response.indexOf("result")+10,response.length() - 4);
+                            if (s.length() > 4){
+                                result[2] = s;
+                                System.out.println(result[2]);
+                                String[] latlons = result[2].split(",");
+                                System.out.println("HERE: " + s);
 
-                            result[2] = s;
-                            System.out.println(result[2]);
-                            String[] latlons = result[2].split(",");
-
-
-                            boolean isLat = true;
-                            Double lat = 0.0;
-                            for (String dec : latlons){
-                                if (isLat){
-                                    lat = Double.valueOf(dec);
-                                    isLat = false;
-                                } else {
-                                    Double lon = Double.valueOf(dec);
-                                    list.add(new LatLng(lat, lon));
-                                    isLat = true;
+                                boolean isLat = true;
+                                Double lat = 0.0;
+                                for (String dec : latlons){
+                                    if (isLat){
+                                        lat = Double.valueOf(dec);
+                                        isLat = false;
+                                    } else {
+                                        Double lon = Double.valueOf(dec);
+                                        list.add(new LatLng(lat, lon));
+                                        isLat = true;
+                                    }
                                 }
+
+                                System.out.println("HERE Points " + list.size());
+                                addHeatMap();
                             }
 
-                            System.out.println("HERE Points " + list.size());
-                            addHeatMap();
 
 
 
