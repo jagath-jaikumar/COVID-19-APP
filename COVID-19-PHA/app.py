@@ -18,25 +18,21 @@ import gmaps
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 ip = s.ip
 api = s.api
-
+popularplaces = "popular-places-day/" + str(int(time.time())) + "/web"
+r = requests.get(os.path.join(ip, popularplaces), verify=False)
+places = r.json()["result"]
 
 data = pd.DataFrame(None, columns = ["Latitude", "Longitude", "Magnitude"])
 
+for i in range(len(places)):
+    data.loc[i] = [places[i]['Lat'], places[i]['Lon'], 1]
+
+print(data)
 
 
 
 
 
-def refresh():
-    popularplaces = "popular-places-day/" + str(int(time.time())) + "/web"
-    r = requests.get(os.path.join(ip, popularplaces), verify=False)
-    places = r.json()["result"]
-
-    for i in range(len(places)):
-        data.loc[i] = [places[i]['Lat'], places[i]['Lon'], 1]
-    print(data)
-
-refresh()
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.PULSE],
                 assets_folder='assets')
@@ -70,6 +66,8 @@ index_page = html.Div([
 
 
 def make_map():
+
+
     import plotly.express as px
     fig = px.density_mapbox(data, lat='Latitude', lon='Longitude', z='Magnitude', radius=10,
                         center=dict(lat=0, lon=180), zoom=0,
@@ -85,7 +83,6 @@ make_map()
               [dash.dependencies.Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/' or pathname == '':
-        refresh()
         return index_page
 
 

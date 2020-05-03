@@ -22,8 +22,8 @@ def store_loc():
 @app.route("/get-all-locations/<mac>", methods=["GET"])
 def get_loc(mac):
     locs = locations.search(where('User') == mac)
-    score = calculateScore(locs)
-    return {"result":"Success","locations":locs, "score":score}
+    score1, score2 = calculateScore(locs)
+    return {"result":"Success","locations":locs, "score1":score1, "score2":score2}
 
 
 @app.route("/get-last-locations/<mac>", methods=["GET"])
@@ -84,7 +84,7 @@ def pop_places(timestamp, type):
 
 
 
-def calculateScore(locations, timestamp):
+def calculateScore(locations, timestamp = None):
     s = Score(locations, timestamp)
     return s.social_distance_score()
 
